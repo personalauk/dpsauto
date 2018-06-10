@@ -4,8 +4,8 @@
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
 <!--
-student.php - runs a report on a student's DPS results XML file (filename only passed as querystring (eventually))
-Alan Lee Staysure 20170722 - derived from rucc main.php
+student.php - runs a report on a student's DPS results XML file (filename only passed as querystring)
+Alan Lee Staysure 20170722
 -->
 
 <link rel="stylesheet" type="text/css" href="dpsauto.css" />
@@ -13,31 +13,39 @@ Alan Lee Staysure 20170722 - derived from rucc main.php
 <title>Student eLearning Results</title>
 
 <?php
+//VERSION
+//Release1 20170722:    (initial release)
+//Release2 20170812:    RESULTSSITE renamed RESULTSDIR and now relative
+//                      DATEFORMAT defined
+//                      variables initialised and non-evaluation handling added
+//                      added alt string to showResult() (scores) output
+//                      display scores in two columns
+//                      removed module start screen dummy graphic
+
 
 //CONSTANTS
+//location of captivate results files relative to results.php & student.php location:
+define('RESULTSDIR', './CaptivateResults/Staysure/LandD/DPS/');  //ie. http://192.168.17.33/results/CaptivateResults/Staysure/LandD/DPS/
 //status value when we have a valid set of XML data
 define('DATAVALID', 'completed');
+//default format of assessment completion date/time
+define('DATEFORMAT', 'd-M-Y H:i:s');  //eg. "02-Dec-2015 10:31:21"
 //staysure business rule: pass mark as a percentage (since the total number of questions could vary, but is in the XML data)
 define('PASSPERCENTAGE', 75);
 
-//location of captivate results files:
-define('RESULTSSITE', 'http://192.168.17.33/results/CaptivateResults/Staysure/LandD/DPS/');  //live site
-//define('RESULTSSITE', 'http://www.personala.co.uk/dpsauto/CaptivateResults/Staysure/LandD/DPS/');  //test site
 
-//test results file:!!!
-//$resultsfile = "Data Protection at Staysure_t.warner_1449140724838.xml";
+//INITIALISATION
+$method = $link = '?';
+$xml = $results = null;
+$status = $module = $date = $username = '?';
+$attempt = $yourscore = $outof = $accuracy = 0;
 
-$method = $_SERVER["REQUEST_METHOD"]; //was PHP page access method GET or POST?
-if ($method == "GET") {
-   if (!empty($_GET["link"])) {
-      $link = $_GET["link"];
-   }
+$method = $_SERVER['REQUEST_METHOD'];  //was PHP page access method GET or POST?
+if ('GET' == $method) {
+    if (!empty($_GET['link'])) {
+        $link = $_GET['link'];  //xml filename provided as a querystring to this page ie. student.php?link=<xmlfile>
+    }
 }
-
-//test processing:!!!
-//$xml = simplexml_load_file(RESULTSSITE . $resultsfile);
-
-
 
 function getTimestamp($link) {
 //extract the full timestamp (in milliseconds) from the full link filename
@@ -46,33 +54,54 @@ function getTimestamp($link) {
     return substr($link, -17, 13);
 }
 
+$xml = simplexml_load_file(RESULTSDIR . $link);
+
+if ($xml) {
+    $status = $xml->xpath('/Course/Result/CoreData/Status/@value')[0];
+
+    //get basic info for display
+    $module     = $xml->xpath('/Course/LessonName/@value')[0];
+    $date       = date(DATEFORMAT, substr(getTimestamp($link), 0, 10));  //substr gets timestamp in seconds (instead of milliseconds)
+    $username   = $xml->xpath('/Course/Variables/stayUser/@value')[0];
+
+    //only get results if valid
+    if (DATAVALID == $status) {
+        $attempt    = $xml->xpath('/Course/QuizAttempts/@value')[0];
+
+        $yourscore  = $xml->xpath('/Course/Result/CoreData/RawScore/@value')[0];  //TODO: possibly improve - failsafe from actual attempt-answer output later?
+        $outof      = $xml->xpath('/Course/TotalQuestions/@value')[0];
+        $accuracy   = ($outof > 0)  ?  ($yourscore / $outof) * 100  :  0;
+
+        //get the right set of results based on the final attempt number
+        if ($attempt > 0) {
+            $results = $xml->xpath('/Course/Result/InteractionData/Interactions[Attempt/@value="' . $attempt . '"]');
+        }
+    }
+}
 
 
-$xml = simplexml_load_file(RESULTSSITE . $link);
-
-
-$status     = $xml->xpath('/Course/Result/CoreData/Status/@value')[0];
-$attempt    = $xml->xpath('/Course/QuizAttempts/@value')[0];
-
-$username   = $xml->xpath('/Course/Variables/stayUser/@value')[0];
-$yourscore  = $xml->xpath('/Course/Result/CoreData/RawScore/@value')[0]; //possibly improve - failsafe from actual attempt-answer output later?
-$outof      = $xml->xpath('/Course/TotalQuestions/@value')[0];
-$module     = $xml->xpath('/Course/LessonName/@value')[0];
-
-$date       = date('d-M-Y H:i:s', substr($timestamp, 0, 10));
-
-$accuracy   = ($yourscore / $outof) * 100;
-
-$results    = $xml->xpath('/Course/Result/InteractionData/Interactions[Attempt/@value="' . $attempt . '"]');
 
 function showResult($result) {
 //display results for one question
     $q = questionNumber($result->InteractionID['value']);
     if ($q > 0) {
-        printf('<p class="data">%02d: <img src="%s.png" /> %s</p>' . PHP_EOL, 
+        $verdict = '?';
+        
+        $verdict = $result->Result['value'];
+        if ('C' == $verdict) {
+            $image = 'C';
+            $alt = 'Correct';
+            $answers = '';
+        } else {
+            $image = 'W';
+            $alt = 'Wrong';
+            $answers = '(' . $result->StudentResponse['value'] . ')';
+        }
+        printf('<p class="data">%02d: <img src="%s.png" alt="%s answer" /> %s</p>' . PHP_EOL, 
             $q,
-            $result->Result['value'],
-            ('W' == $result->Result['value']) ? '(' . $result->StudentResponse['value'] . ')' : ''
+            $image,
+            $alt,
+            $answers
         ); 
     }
 }
@@ -132,45 +161,54 @@ function questionNumber($interaction) {
     endswitch;
 }
 ?>
-
-<script language="javascript">
-//empty
-</script>
-
 </head>
 
 <body>
 
 <p class="atr">Assessment Test Results</p>
-<p class="data"><?php echo $module . '   ' . date('d-M-Y H:i:s', substr(getTimestamp($link), 0, 10)) ?></p>
+<p class="data"><?php echo "$module   $date" ?></p>
 
 <p class="head">Username: <b><?php echo $username ?></b></p>
-<p class="score">Your Score: <?php echo $yourscore ?></p>
-<p class="head">Out of: <b><?php echo $outof ?></b></p>
-<p class="head">Accuracy: <b><?php echo $accuracy ?>%</b></p>
 <?php 
+//only display results if valid
+if (DATAVALID == $status) {
+    echo "<p class=\"score\">Your Score: $yourscore</p>";
+    echo "<p class=\"head\">Out of: <b>$outof</b></p>";
+    echo "<p class=\"head\">Accuracy: <b>$accuracy%</b></p>";
     if ($accuracy >= PASSPERCENTAGE) {
         echo '<p class="pass">Congratulations, you passed the assessment test.</p>';
     } else {
         echo '<p class="fail">Sorry, you failed the assessment test.</p>';
     }
+} else {
+    echo "<p class=\"fail\">Results data is invalid ($status)</p>";
+}
 ?>
 
 <div class="answers">
-<table><tr>
-<td width="180" valign="top">
-Your Answers
-
+<table>
 <?php 
-    for ($i=0; $i<20; $i++) {
-        showResult($results[$i]);
+if (DATAVALID == $status) {
+    if ($results) {
+        echo '<tr><td>Your Answers</td></tr>' . PHP_EOL;
+        echo '<tr>' . PHP_EOL;
+        echo '<td width="220" valign="top">' . PHP_EOL;
+        //display in 2 columns
+        for ($i=0,$j=0; $i<($outof/2); $i++) {  //left column
+            showResult($results[$i]);
+        }
+        echo '</td>' . PHP_EOL;
+        echo '<td width="220" valign="top">' . PHP_EOL;
+        for ($j=$i; $j<$outof; $j++) {  //right column
+            showResult($results[$j]);
+        }
+        echo '</td>' . PHP_EOL;
+    } else {
+        echo '<tr><td>(Answers not found)</td></tr>' . PHP_EOL;
     }
+}
 ?>
-</td>
-<td valign="top">
-<img id="qimage" width="600" src="dpsstart.png" alt="Module start screen" title="Data Protection at Staysure" />
-</td>
-</tr></table>
+</table>
 </div> 
 
 </body>
