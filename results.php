@@ -13,45 +13,31 @@ Alan Lee Staysure 20170802
 <title>eLearning Results</title>
 
 <?php
+//VERSION
+//Release1 20170802:    (initial release)
+//Release2 20170812:    RESULTSDIR now relative
+//                      DATEFORMAT defined
+//                      variables initialised
+//                      in getUser() apostrophes are converted back from %27
+//                      changed browser target window to StayLanddDpsautoStud
+
 
 //CONSTANTS
-//status value when we have a valid set of XML data
-//define('DATAVALID', 'completed');
-//staysure business rule: pass mark as a percentage (since the total number of questions could vary, but is in the XML data)
-//define('PASSPERCENTAGE', 75);
-
-//location of captivate results files:
-//define('RESULTSSITE', 'http://192.168.17.33/results/CaptivateResults/Staysure/LandD/DPS/');  //live site
-//define('RESULTSSITE', 'http://www.personala.co.uk/dpsauto/CaptivateResults/Staysure/LandD/DPS/');  //test site
-define('RESULTSDIR', './CaptivateResults/Staysure/LandD/DPS/');  //test site
-
-/*
-//test results file:!!!
-$resultsfile = "Data Protection at Staysure_t.warner_1449140724838.xml";
+//location of captivate results files relative to results.php & student.php location:
+define('RESULTSDIR', './CaptivateResults/Staysure/LandD/DPS/');  //ie. http://192.168.17.33/results/CaptivateResults/Staysure/LandD/DPS/
+//default format of assessment completion date/time
+define('DATEFORMAT', 'd-M-Y H:i:s');  //eg. "02-Dec-2015 10:31:21"
 
 
-
-//test processing:!!!
-$xml = simplexml_load_file(RESULTSSITE . $resultsfile);
-
-
-$status     = $xml->xpath('/Course/Result/CoreData/Status/@value')[0];
-$attempt    = $xml->xpath('/Course/QuizAttempts/@value')[0];
-
-$username   = $xml->xpath('/Course/Variables/stayUser/@value')[0];
-$yourscore  = $xml->xpath('/Course/Result/CoreData/RawScore/@value')[0]; //possibly improve - failsafe from actual attempt-answer output later?
-$outof      = $xml->xpath('/Course/TotalQuestions/@value')[0];
-$module     = $xml->xpath('/Course/LessonName/@value')[0];
-$date       = $xml->xpath('/Course/Variables/stayStarted/@value')[0];
-
-$accuracy   = ($yourscore / $outof) * 100;
-
-$results    = $xml->xpath('/Course/Result/InteractionData/Interactions[Attempt/@value="' . $attempt . '"]');
-*/
+//INITIALISATION
+$dir = null;
+$results = array();
+$entry = $link = $timestamp = '?';
 
 
 function validFilename($filename) {
 //verifies the filename found in the directory is a valid results data file filename
+// eg: "Data Protection at Staysure_t.williamson_1438098990742.xml"
     return (
         //check extension
         ('.xml' == strtolower(substr($filename, -4, 4))) &&
@@ -62,15 +48,17 @@ function validFilename($filename) {
 
 function getUser($link) {
 //extract the username from the full link filename
-// eg:  "Data Protection at Staysure_t.warner_1449140724838.xml" returns "t.warner"
-//WARNING: ***Assumes that $link has already been verified by validFilename***
+// eg: "Data Protection at Staysure_t.warner_1449140724838.xml" returns "t.warner"
+//WARNING: ***Assumes that $link has already been verified by validFilename()***
 //Note: username may have internal underscores, so this is why $link is not tokenised
+    $lt = '?';
+    $os = 0;
     //truncate string after the username
     $lt = substr($link, 0, strlen($link)-18);
     //calculate offset based on whether $link is rawurlencoded - refer to validFilename (also see warning above)
-    ('Data ' == substr($lt, 0, 5)) ? $os = 28 : $os = 34;
-    //extract username
-    return substr($lt, $os);
+    ('Data ' == substr($lt, 0, 5))  ?  $os = 28  :  $os = 34;
+    //extract username (apostrophes are converted back from %27)
+    return rawurldecode(substr($lt, $os));
 }
 
 function getTimestamp($link) {
@@ -81,16 +69,17 @@ function getTimestamp($link) {
 }
 
 function displayResult($link, $timestamp) {
-//    echo $link . '   ' . getUser($link) . '   ' . date('d-M-Y H:i:s', substr($timestamp, 0, 10)) . PHP_EOL;
-//    echo '<tr><td><p class="reslist">' . getUser($link) . '</p></td><td><p class="reslist">' . date('d-M-Y H:i:s', substr($timestamp, 0, 10)) . '</p></td></tr>';
-    $anchor = '<a target="staylanddres" href="student.php?link=' . $link . '">';
-    echo '<tr><td>' . $anchor . '<p class="reslist">' . getUser($link) . '</p></a></td><td>' . $anchor . '<p class="reslist">' . date('d-M-Y H:i:s', substr($timestamp, 0, 10)) . '</p></a></td></tr>';
+//display a row in the results list
+    $anchor = '?';
+    $anchor = '<a target="StayLanddDpsautoStud" href="student.php?link=' . $link . '">';
+    //substr gets timestamp in seconds (instead of milliseconds)
+    echo '<tr><td>' . $anchor . '<p class="reslist">' . getUser($link) . '</p></a></td><td>' . $anchor . '<p class="reslist">' . date(DATEFORMAT, substr($timestamp, 0, 10)) . '</p></a></td></tr>';
 }
-
 ?>
 
 <script language="javascript">
 function display(id) {
+//local javascript function to display 1 of 2 tables depending on the sort order required by clicking the relevant button
     if ('sortdate' == id) {
         //show table sorted by reverse date
         document.getElementById('btnsortdate').style.backgroundColor='yellow';  //button on
@@ -120,7 +109,6 @@ function display(id) {
 <p class="atr">Assessment Test Results Data Files</p>
 
 <?php 
-$results = array();
 $dir = dir(RESULTSDIR);
 while ( false !== ($entry = $dir->read()) ) {
     if (validFilename($entry)) {
@@ -143,7 +131,7 @@ echo '<p class="data"> ' . count($results) . ' Results</p>'.PHP_EOL;
 
 <table id="sortdate" style="display: table;">
 <?php
-arsort($results);  //by timestamp (date)
+arsort($results);  //sort by timestamp (reverse date)
 foreach ($results as $link => $timestamp) {
     displayResult($link, $timestamp);
 }
@@ -152,7 +140,7 @@ foreach ($results as $link => $timestamp) {
 
 <table id="sortuser" style="display: none;">
 <?php
-ksort($results);  //by link (user)
+ksort($results);  //sort by link (user)
 foreach ($results as $link => $timestamp) {
     displayResult($link, $timestamp);
 }
