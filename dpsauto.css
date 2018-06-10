@@ -1,5 +1,9 @@
 /* dpsauto.css staysure elearning results files display */
 
+body {
+   background-color: white;
+}
+
 .atr {
    color: #6f2c91;   /* staysure purple */
    font-family: DaxPro, Helvetica, Arial, Sans-serif;
