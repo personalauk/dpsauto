@@ -20,6 +20,7 @@ Alan Lee Staysure 20170802
 //                      variables initialised
 //                      in getUser() apostrophes are converted back from %27
 //                      changed browser target window to StayLanddDpsautoStud
+//Release5 20180222:    using styles in javascript function
 
 
 //CONSTANTS
@@ -82,18 +83,14 @@ function display(id) {
 //local javascript function to display 1 of 2 tables depending on the sort order required by clicking the relevant button
     if ('sortdate' == id) {
         //show table sorted by reverse date
-        document.getElementById('btnsortdate').style.backgroundColor='yellow';  //button on
-        document.getElementById('btnsortuser').style.backgroundColor='silver';  //button off
-        document.getElementById('btnsortdate').style.color='red';               //button on
-        document.getElementById('btnsortuser').style.color='black';             //button off
-        document.getElementById('sortuser').style.display='none';               //table hidden
-        document.getElementById('sortdate').style.display='table';              //table visible
+        document.getElementById('btnsortdate').className='buttonon';    //button on
+        document.getElementById('btnsortuser').className='buttonoff';   //button off
+        document.getElementById('sortuser').style.display='none';       //table hidden
+        document.getElementById('sortdate').style.display='table';      //table visible
     } else {
         //show table sorted by username
-        document.getElementById('btnsortuser').style.backgroundColor='yellow';
-        document.getElementById('btnsortdate').style.backgroundColor='silver';
-        document.getElementById('btnsortuser').style.color='red';
-        document.getElementById('btnsortdate').style.color='black';
+        document.getElementById('btnsortuser').className='buttonon';
+        document.getElementById('btnsortdate').className='buttonoff';
         document.getElementById('sortdate').style.display='none';
         document.getElementById('sortuser').style.display='table';
     }
@@ -123,8 +120,8 @@ echo '<p class="data"> ' . count($results) . ' Results</p>'.PHP_EOL;
 <form>
 <table>
   <tr>
-    <td><p class="buttons"><input type="button" id="btnsortuser" onclick="display('sortuser');" value="Sort by Username" style="background-color: silver; color: black;" /></p></td>
-    <td><p class="buttons"><input type="button" id="btnsortdate" onclick="display('sortdate');" value="Sort by Date" style="background-color: yellow; color: red;" /></p></td>
+    <td><p class="buttons"><input type="button" id="btnsortuser" class="buttonoff" onclick="display('sortuser');" value="Sort by Username" /></p></td>
+    <td><p class="buttons"><input type="button" id="btnsortdate" class="buttonon" onclick="display('sortdate');" value="Sort by Date" /></p></td>
   </tr>
 </table>
 </form>
