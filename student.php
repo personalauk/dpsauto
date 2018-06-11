@@ -21,6 +21,7 @@ Alan Lee Staysure 20170722
 //                      added alt string to showResult() (scores) output
 //                      display scores in two columns
 //                      removed module start screen dummy graphic
+//Release3 20170818:    links to graphic of elearning question
 
 
 //CONSTANTS
@@ -97,10 +98,11 @@ function showResult($result) {
             $alt = 'Wrong';
             $answers = '(' . $result->StudentResponse['value'] . ')';
         }
-        printf('<p class="data">%02d: <img src="%s.png" alt="%s answer" /> %s</p>' . PHP_EOL, 
+        printf('<p class="data">%02d: <img src="%s.png" alt="%s answer" onclick="displayquestion(\'%02d\');" /> %s</p>' . PHP_EOL,
             $q,
             $image,
             $alt,
+            $q,
             $answers
         ); 
     }
@@ -161,6 +163,18 @@ function questionNumber($interaction) {
     endswitch;
 }
 ?>
+
+<script language="javascript">
+function displayquestion(num) {
+//local javascript function to display image of the clicked question
+    alt = 'Question ' + num;
+    img = document.getElementById('qimage');
+    img.src = 'q' + num + '.png';
+    img.alt = alt;
+    img.title = alt;
+}
+</script>
+
 </head>
 
 <body>
@@ -172,9 +186,9 @@ function questionNumber($interaction) {
 <?php 
 //only display results if valid
 if (DATAVALID == $status) {
-    echo "<p class=\"score\">Your Score: $yourscore</p>";
-    echo "<p class=\"head\">Out of: <b>$outof</b></p>";
-    echo "<p class=\"head\">Accuracy: <b>$accuracy%</b></p>";
+    echo "<p class=\"score\">Your Score: $yourscore</p>" . PHP_EOL;
+    echo "<p class=\"head\">Out of: <b>$outof</b></p>" . PHP_EOL;
+    echo "<p class=\"head\">Accuracy: <b>$accuracy%</b></p>" . PHP_EOL;
     if ($accuracy >= PASSPERCENTAGE) {
         echo '<p class="pass">Congratulations, you passed the assessment test.</p>';
     } else {
@@ -190,10 +204,10 @@ if (DATAVALID == $status) {
 <?php 
 if (DATAVALID == $status) {
     if ($results) {
-        echo '<tr><td>Your Answers</td></tr>' . PHP_EOL;
+        echo '<tr><td colspan="3">Your Answers <i>(Click the tick or cross to see the question)</i></td></tr>' . PHP_EOL;
         echo '<tr>' . PHP_EOL;
         echo '<td width="220" valign="top">' . PHP_EOL;
-        //display in 2 columns
+        //display answers in 2 columns
         for ($i=0,$j=0; $i<($outof/2); $i++) {  //left column
             showResult($results[$i]);
         }
@@ -203,6 +217,8 @@ if (DATAVALID == $status) {
             showResult($results[$j]);
         }
         echo '</td>' . PHP_EOL;
+        //display image of a single question clicked (initially the start screen)
+        echo '<td><img id="qimage" width="640" src="dpsstart.png" alt="Module start screen" title="Data Protection at Staysure" /></td>' . PHP_EOL;
     } else {
         echo '<tr><td>(Answers not found)</td></tr>' . PHP_EOL;
     }
