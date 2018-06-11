@@ -1,84 +1,94 @@
 /* dpsauto.css staysure elearning results files display */
 
 body {
-   background-color: white;
+    background-color: white;
 }
 
 .atr {
-   color: #6f2c91;   /* staysure purple */
-   font-family: DaxPro, Helvetica, Arial, Sans-serif;
-   font-size: 35px;
-   line-height: 40px;
-   text-align: left;
-   font-weight: bold;
+    color: #6f2c91;   /* staysure purple */
+    font-family: DaxPro, Helvetica, Arial, Sans-serif;
+    font-size: 35px;
+    line-height: 40px;
+    text-align: left;
+    font-weight: bold;
 }
 
 .head,
 .score,
 .pass,
 .fail {
-   color: blue;
-   font-family: Helvetica, Arial, Sans-serif;
-   font-size: 25px;
-   line-height: 15px;
-   text-align: left;
-   font-weight: normal;
+    color: blue;
+    font-family: Helvetica, Arial, Sans-serif;
+    font-size: 25px;
+    line-height: 15px;
+    text-align: left;
+    font-weight: normal;
 }
 .score {
-   font-size: 50px;
-   font-weight: bold;
+    font-size: 50px;
+    font-weight: bold;
 }
 .pass,
 .fail {
-   width: 550px;
-   background-color: #ccffcc;
-   padding: 10px;
-   color: green;
-   font-size: 20px;
+    width: 550px;
+    background-color: #ccffcc;
+    padding: 10px;
+    color: green;
+    font-size: 20px;
 }
 .fail {
-   background-color: #ffcccc;
-   color: red;
+    background-color: #ffcccc;
+    color: red;
 }
 
 .data,
 .answers {
-   font-family: Verdana, Sans-serif;
-   font-weight: normal;
-   font-size: 15px;
-   line-height: 15px;
-   text-align: left;
-   vertical-align: text-top;
-   color: black;
+    font-family: Verdana, Sans-serif;
+    font-weight: normal;
+    font-size: 15px;
+    line-height: 15px;
+    text-align: left;
+    vertical-align: text-top;
+    color: black;
 }
 .answers {
-   margin: 40px;
+    margin: 40px;
 }
 
 .reslist,
 .buttons {
-   width: 190px;
-   margin: 0px;
-   padding-left: 3px;
-   padding-right: 3px;
+    width: 190px;
+    margin: 0px;
+    padding-left: 3px;
+    padding-right: 3px;
 	font-family: Verdana, Arial, Sans-Serif;
 	font-weight: normal;
-   font-size: 15px;
-   line-height: 19px;
+    font-size: 15px;
+    line-height: 19px;
 	text-decoration: none;
 	color: black;
-	background: #ccccff;
+	background-color: #ccccff;
 }
 .reslist:hover {
-	background: #ffff99;
+	background-color: #ffff99;
 }
 .buttons {
-   padding-top: 6px;
-   padding-bottom: 6px;
-	background: #9999ff;
-   text-align: center;
+    padding-top: 6px;
+    padding-bottom: 6px;
+    background-color: #9999ff;
+    text-align: center;
+}
+
+.buttonoff {
+	color: black;
+	background-color: silver;
+}
+
+.buttonon {
+	color: red;
+	background-color: yellow;
 }
 
 a[href] {
-   text-decoration: none;
+    text-decoration: none;
 }
